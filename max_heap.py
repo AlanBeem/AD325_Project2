@@ -1,11 +1,16 @@
 # Represents a MaxHeap as an array- heapify is by sorting and assuming tree re. indexes
-# Yipes- could make a MaxHeap(HashTable) where max heap indexing was composed through probing, but I"m not sure that would make any sense
+# Yipes- could make a MaxHeap(HashTable) where max heap indexing was composed through probing,
+# but I"m not sure that would make any sense [key == index ? yea, consider hashing the index with a list of SystemRandom().randbits -> this will be used for comparison of collisions for probe functions]
 
 class MaxHeap:
-    def __init__(self):
+    def __init__(self, name: str =''):
         self.array = self.HeapArray()  # of (priority, item)
         self.last_child = 0
         self.last_parent = 0
+        self.name = name
+
+    def __str__(self) -> str:
+        return str(self.array)
 
     def parent(self, index):
         return (index - 1) // 2
@@ -29,33 +34,38 @@ class MaxHeap:
 
     def percolate_up(self, index):
         parent_index = self.parent(index)
-        if self.array(index)[0] > self.array(parent_index)[0]:
+        if self.array[index][0] > self.array[parent_index][0]:
             self.swap(index, parent_index)
             if parent_index > 0:
                 self.percolate_up(parent_index)
 
     def percolate_down(self, index):
         child_indices = (self.left_child(index), self.right_child(index))
-        if self.array[child_indices[0]][0] >= self.array[child_indices[1]][0]:
-            child_index = child_indices[0]
-        else:
-            child_index = child_indices[1]
-        if self.array(index)[0] < self.array(child_index)[0]:
-            self.swap(index, child_index)
-            if child_index <= self.last_parent:
-                self.percolate_down(child_index)  # recursive
+        if child_indices[0] <= self.last_child and child_indices[1] <= self.last_child:
+            if self.array[child_indices[0]][0] >= self.array[child_indices[1]][0]:
+                child_index = child_indices[0]
+            else:
+                child_index = child_indices[1]
+            if self.array[index][0] < self.array[child_index][0]:
+                self.swap(index, child_index)
+                if child_index <= self.last_parent:
+                    self.percolate_down(child_index)  # recursive
 
     def push(self, priority, item: any):
-        self.array[self.last_child + 1] = (priority, item)
-        self.percolate_up(len(self.array) - 1)
-        self.last_child += 1
-        self.last_parent = self.parent(self.last_child)
+        if len(self.array) == 0:
+            self.array[0] = (priority, item)
+        else:
+            self.array[self.last_child + 1] = (priority, item)
+            self.last_child += 1
+            self.last_parent = self.parent(self.last_child)
+            self.percolate_up(self.last_child)  # len(self.array) - 1
+
 
     def pop(self):
         self.swap(0, self.last_child)
         popped = self.array.pop()
-        self.percolate_down(0)
-        self.last_child -= 1
+        self.last_child -= 1        #
+        self.percolate_down(0)      # bug fix: switched the order of these two lines; else: value of self.last_child invalidates comparison in self.percolate_down(...)  11/01/2024
         return popped
 
     def top_n(self, n) -> list[any]:
@@ -71,9 +81,12 @@ class MaxHeap:
 
     class HeapArray(list):
         def __setitem__(self, index: int, value: any) -> None:
-            # while index > len(self) - 1:
+            # # while index > len(self) - 1:
+            # #     self.append(None)
+            # for i in range(index + 1 - len(self)):
             #     self.append(None)
-            for i in range(index + 1 - len(self)):
-                self.append(None)
-            self[index] = value
+            # self[index] = value
+            if index >= len(self):
+                self.extend([None] * (index - len(self) + 1))
+            super().__setitem__(index, value)
 

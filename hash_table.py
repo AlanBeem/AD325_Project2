@@ -348,8 +348,8 @@ class HashTable:
             if self.hash_table[current]:
                 retrieval = self.hash_table[current]
                 self.hash_table[current] = True  # represents empty after removal
-        if retrieval is not None:
-            self.load_factor_num -= 1
+        # if retrieval is not None:
+        #     self.load_factor_num -= 1 # this should not be decremented, as this will produce an endless loop of probing
         return retrieval  # where a predicate regarding code behavior abbreviates 'return retrieval' all possible paths have True for that predicate, so all can be combined into one statement (todo: see K-maps)
         
     def contains(self, key: int) -> bool:  # such as for computing intersection of items

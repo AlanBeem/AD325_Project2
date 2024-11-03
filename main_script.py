@@ -11,7 +11,7 @@ def main() -> None:
 def demonstration() -> None:
     # print output to display hash table contents for each selected probing method
     # probing_functions_list = ['linear', 'quadratic', 'double', 'prime', '3/2', "to Euler's number", "^e 2", 'cubic', 'exponential', 'quartic', 'quintic', 'sextic', 'septic', 'octic', 'nonic', 'decic', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', 'rand']  #, 'rand double hashing']
-    probing_functions_list = ['sep', 'linear', 'quadratic', 'double', 'prime', "^e 2", 'rand']  # subset of defined functions
+    probing_functions_list = ['sep', 'linear', 'quadratic', 'prime', "^e 2", 'rand']  # subset of defined functions , 'double'
     for probe_function in probing_functions_list:
         print(f"probe_function: {probe_function}")
         recommendation_system = RecommendationSystem('user_data.txt')

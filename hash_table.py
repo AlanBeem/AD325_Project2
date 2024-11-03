@@ -1,8 +1,10 @@
-# For future use: torque up rehash size to a larger increment (current purpose: compare different probing functions)
-#
-#
-import math
-# TODO Make HashTable work with strings as keys
+# For future use: This does not update duplicate keys, useful for clustering;
+#  if updating is required, subclass or retrieve then insert
+# 11/02/2024
+# Alan M H Beem
+import math  # Euler's constant, exponential function
+# from random import SystemRandom  # hash table in hash table
+
 
 class HashTable:
     """def linear_probing(hash1: int, probe: int, hash_size: int) -> int:
@@ -44,7 +46,7 @@ class HashTable:
                     prime_bool = False
                     break
             return prime_bool
-        def isMersenne(n: int) -> bool:
+        def isMersenne(n: int) -> bool:  # I'd read somewhere that hash table sizes 'near a power of 2' should be avoided, but I also found a reference describing the utility of hash table sizes equal to Mersenne primes
             """evaluates Mersenne primeness (isPrime(n) and n == 2^k - 1 for k in setN)\n
             n == 2^k - 1\n
             n + 1 == 2^k\n
@@ -53,7 +55,7 @@ class HashTable:
             return isPrime(n) and math.log2(n + 1) % 1.0 < 1E-10  # 1E-15, same output
         #                                                                                  ##
         current_prime += 1
-        while not isPrime(current_prime) or isMersenne(current_prime):
+        while not isPrime(current_prime):  # or isMersenne(current_prime):
             current_prime += 1
         return current_prime
     
@@ -72,6 +74,9 @@ class HashTable:
 
     @staticmethod
     def separate_chaining(hash1: int, probe: int, hash_size: int) -> int:
+        # This is a placeholder method, sufficient for conditional execution of 
+        #  class method defined behaviors
+        #  (by default, collision_avoidance='separate chaining', line 178)
         pass
 
     @staticmethod
@@ -90,6 +95,11 @@ class HashTable:
         return (hash1 + int(probe**(math.e))) % hash_size
     
     @staticmethod
+    def to_eulers_number_non_even(hash1: int, probe: int, hash_size: int) -> int:
+        to_e_non_even = (hash1 + int(probe**(math.e))) % hash_size
+        return (to_e_non_even if (to_e_non_even % 2 != 0) else (to_e_non_even + 1)) % hash_size
+    
+    @staticmethod
     def cubic_probing(hash1: int, probe: int, hash_size: int) -> int:
         return (hash1 + probe**3) % hash_size
     
@@ -97,35 +107,182 @@ class HashTable:
     def exponential_probing(hash1: int, probe: int, hash_size: int) -> int:
         return (hash1 + int(math.exp(float(probe)))) % hash_size
     
+    @staticmethod
+    def quartic_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**4) % hash_size
+    
+    @staticmethod
+    def quintic_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**5) % hash_size
+    
+    @staticmethod
+    def sextic_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**6) % hash_size
+    
+    @staticmethod
+    def septic_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**7) % hash_size
+    
+    @staticmethod
+    def octic_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**8) % hash_size
+    
+    @staticmethod
+    def nonic_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**9) % hash_size
+    
+    @staticmethod
+    def decic_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**10) % hash_size
+    
+    @staticmethod
+    def to_11_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**11) % hash_size
+
+    @staticmethod
+    def to_12_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**12) % hash_size
+
+    @staticmethod
+    def to_13_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**13) % hash_size
+    
+    @staticmethod
+    def to_14_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**14) % hash_size
+    
+    @staticmethod
+    def to_15_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**15) % hash_size
+    
+    @staticmethod
+    def to_16_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**16) % hash_size
+    
+    @staticmethod
+    def to_17_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**17) % hash_size
+    
+    @staticmethod
+    def to_18_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**18) % hash_size
+    
+    @staticmethod
+    def to_19_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**19) % hash_size
+    
+    @staticmethod
+    def to_20_probing(hash1: int, probe: int, hash_size: int) -> int:
+        return (hash1 + probe**20) % hash_size
+    
+    # These do need to be in a subclass... TODO
+    # def rand_hash(self, key: int) -> int:
+    #     if not self.rand_key_dict.contains(key):
+    #         rand_16bits = SystemRandom().getrandbits(16)
+    #         self.rand_key_set.insert(rand_16bits, rand_16bits)
+    #         self.rand_key_dict.insert(key, rand_16bits)
+    #     dicted_tuple = self.rand_key_dict.retrieve(key)
+    #     self.rand_key_dict.insert(dicted_tuple[0], dicted_tuple[1])  # could do default value arguments to also accept a tuple directly
+    #     return dicted_tuple[1]
+
+    # def rand_hash_probing(self, hash1: int, probe: int, hash_size: int) -> int:
+    #     hash2 = self.rand_hash(probe)
+    #     return (hash1 + hash2) % hash_size
+    
 # ## # # #  #  #  #
     def __init__(self, size, collision_avoidance: str = 'separate chaining', initial_data: list[any] = []) -> None:
         # False represents never filled, True represents removed; filled: tuple (key, value) or SeparateNode
         # This behavior is consistent across all collision avoidance techniques, were a method to be implemented to switch techniques, it would work, but that wouldn't matter, as the table would need to be rehashed
         #  and actually as I think about it further, were the table not reset when rehashing, there would be a loop of rehashing
+        if size < 2:
+            size = 2
         self.collision_count_by_hashsize = []
         self.collision_count = 0
+        self.rehash_count = 0
         self.hash_table = [False for i in range(size)]  # self.insert: self.hash_table[current] = (key, value)
+        self.load_factor_num = 0
+        self.load_factor_div = len(self.hash_table)
+        self.rehash_increment = lambda p: len(p)  # double the size of the hash table
+        # self.rehash_increment = lambda p: int(len(p)**(3 / 2))
+        self.collision_avoidance_string = collision_avoidance
         if collision_avoidance.lower().startswith('linear'):
             self.probe_function = self.linear_probing
         elif collision_avoidance.lower().startswith('quad'):
             self.probe_function = self.quadratic_probing
         elif collision_avoidance.lower().startswith('double'):
             self.probe_function = self.double_hashing
-        elif collision_avoidance.lower().startswith('sep'):
+        elif collision_avoidance.lower().startswith('sep') and collision_avoidance.lower() != 'septic':
             self.probe_function = self.separate_chaining
         elif collision_avoidance.lower().startswith('prime'):
             self.probe_function = self.prime_probing
         elif collision_avoidance.lower().startswith('3'):
             self.probe_function = self.three_halves_probing
-        elif collision_avoidance.lower().count('euler') > 0:
+        elif collision_avoidance.lower().count('euler') > 0 and collision_avoidance.lower().count('even') == 0:
             self.probe_function = self.to_eulers_number
+        elif collision_avoidance.lower().count('euler') > 0 and collision_avoidance.lower().count('even') > 0 or collision_avoidance == '^e 2':
+            self.probe_function = self.to_eulers_number_non_even
         elif collision_avoidance.lower().count('cubic') > 0:
             self.probe_function = self.cubic_probing
         elif collision_avoidance.lower().count('exp') > 0:
             self.probe_function = self.exponential_probing
-        for each in initial_data:
-            self.insert(each)
-    
+        elif collision_avoidance.lower().count('quart') > 0:
+            self.probe_function = self.quartic_probing
+        elif collision_avoidance.lower().count('quint') > 0:
+            self.probe_function = self.quintic_probing
+        elif collision_avoidance.lower().count('sextic') > 0:
+            self.probe_function = self.sextic_probing
+        elif collision_avoidance.lower().count('septic') > 0:
+            self.probe_function = self.septic_probing
+        elif collision_avoidance.lower().count('octic') > 0:
+            self.probe_function = self.octic_probing
+        elif collision_avoidance.lower().count('nonic') > 0:
+            self.probe_function = self.nonic_probing
+        elif collision_avoidance.lower().count('decic') > 0:
+            self.probe_function = self.decic_probing
+        elif collision_avoidance.lower().count('11') > 0:
+            self.probe_function = self.to_11_probing
+        elif collision_avoidance.lower().count('12') > 0:
+            self.probe_function = self.to_12_probing
+        elif collision_avoidance.lower().count('13') > 0:
+            self.probe_function = self.to_13_probing
+        elif collision_avoidance.lower().count('14') > 0:
+            self.probe_function = self.to_14_probing
+        elif collision_avoidance.lower().count('15') > 0:
+            self.probe_function = self.to_15_probing
+        elif collision_avoidance.lower().count('16') > 0:
+            self.probe_function = self.to_16_probing
+        elif collision_avoidance.lower().count('17') > 0:
+            self.probe_function = self.to_17_probing
+        elif collision_avoidance.lower().count('18') > 0:
+            self.probe_function = self.to_18_probing
+        elif collision_avoidance.lower().count('19') > 0:
+            self.probe_function = self.to_19_probing
+        elif collision_avoidance.lower().count('20') > 0:
+            self.probe_function = self.to_20_probing
+        # elif collision_avoidance.lower().count('rand') > 0:
+        #     self.probe_function = self.rand_hash_probing
+        else:
+            self.probe_function = self.separate_chaining
+        # self.rand_key_dict = HashTable(1)
+        # self.rand_key_set = HashTable(1)
+        if initial_data != []:
+            for datum in initial_data:
+                self.insert(datum[0], datum[1])
+
+    def __str__(self) -> str:
+        display_string = f"HashTable, collision_avoidance: {self.collision_avoidance_string}\n"
+        for index in range(len(self.hash_table)):
+            display_string += f"Index {index}: {str(self.hash_table[index])}\n"
+            # detect first occurrence of all remaining values == False, update string accordingly
+            if not self.hash_table[index] and\
+                  all(value == self.hash_table[index] for value in self.hash_table[index + 1:]):
+                display_string += f"...\nIndex {len(self.hash_table) - 1}: {self.hash_table[-1]}\n"
+                break
+        return display_string
+
+    def display(self) -> None:
+        print(self)
+
     def get_all(self):
         all_tuples = []
         for each in self.hash_table:
@@ -139,17 +296,31 @@ class HashTable:
     def get_keys(self) -> list[int]:
         return [each[0] for each in self.get_all()]
 
-    def rehash_table(self) -> None:  # -> float ? # return time for each function
-        current_data = self.get_all()
-        self.hash_table = [False for r in range(self.get_next_prime(len(self.hash_table)))]  # + 100))]
-        for each in current_data:
-            self.insert(each[0], each[1])
+    def rehash_table(self, force_rehash: bool =False) -> bool:  # -> float ? # return time for each function
+        if self.probe_function == self.separate_chaining:
+            rehash_bool = self.load_factor_num / self.load_factor_div >= 1
+        else:
+            rehash_bool = self.load_factor_num / self.load_factor_div >= 0.5
+        # if self.probe_function == self.separate_chaining:
+        #     rehash_bool = sum([0 if not isinstance(each, HashTable.SeparateNode) else len(each) for each in self.hash_table]) / self.load_factor_div >= 1
+        # else:
+        #     rehash_bool = sum([int(bool(each)) for each in self.hash_table]) / self.load_factor_div >= 0.5
+        if rehash_bool or force_rehash:
+            # print(f"rehashing from {len(self.hash_table)} to {self.get_next_prime(2 * len(self.hash_table))}")
+            current_data = self.get_all()
+            # print(f"current_data: {current_data}")
+            self.load_factor_num = 0
+            self.load_factor_div = self.get_next_prime(2 * len(self.hash_table))
+            self.hash_table = [False for r in range(self.load_factor_div)]
+            for each in current_data:
+                self.insert(each[0], each[1])
+        return rehash_bool or force_rehash
 
     def hash(self, key) -> int:
         if isinstance(key, int):
             return key % len(self.hash_table)
-        else:
-            return hash(key) % len(self.hash_table)  # This should preclude need for string_xor_hash method elsewhere
+        # else:  # if the provided key is not an int, whatever code running this should raise an exception
+        #     return hash(key) % len(self.hash_table)  # This should preclude need for string_xor_hash method elsewhere
     
     # def extend_update(self, key: int, value: any) -> None:
     #     if self.contains(key):
@@ -162,40 +333,36 @@ class HashTable:
         return self.probe_function(hash_key, probe, len(self.hash_table))  # TODO Add traversal tracking to SeparateNode (?)
     
     def insert(self, key: int, value: any) -> None:
+        self.load_factor_num += 1  # removal leaves a value that must be traversed, so this is not decremented
+        self.rehash_table()  # conditional within method, re λ
         hash_key = self.hash(key)
         if self.probe_function == self.separate_chaining:
             if not isinstance(self.hash_table[hash_key], HashTable.SeparateNode):
                 self.hash_table[hash_key] = HashTable.SeparateNode((key, value))
             else:
                 self.hash_table[hash_key].add(key, value)
-            longest_chain = 0
-            for each in self.hash_table:
-                if isinstance(each, HashTable.SeparateNode):
-                    longest_chain = max(len(each), longest_chain)
-            if longest_chain >= len(self.hash_table):  # TODO adjust to load factor (or compare speed of accessing elements in linked list to completing iteration over a list of the same size (how long should chains be?))
-                self.rehash_table()
         else:
             current = hash_key
             probe = 0
-            # while not self.hash_table[current] or self.hash_table[current][0] == key:
-            while self.hash_table[current]:  # or self.hash_table[current][0] != key:  doesn't update ... 
+            while self.hash_table[current]:
                 probe += 1
                 current = self.probe(hash_key, probe)
-                if probe >= len(self.hash_table) // 2:  # TODO adjust to load factor
-                    self.rehash_table()  #              # whats expected probe distance per lambda? put plot in ipynb
+                if probe >= len(self.hash_table) // 2:  # how often does this happen?
+                    print("probe greater than or equal to N // 2")
+                    self.rehash_table(True)
                     self.insert(key, value)
                     break
+                # if probe >= 0.5*(1 + 1/((1 - self.load_factor_num / self.load_factor_div)**2)):
+                # this is a condition from AD325 slides on Hash Tables, regarding the probe cost of a linear search
             else:
                 self.hash_table[current] = (key, value)
 
-    def retrieve(self, key: int) -> any:   # retrieves a value from (key, value) (removes the tuple or containing object from data structure (with garbage collection))
+    def retrieve(self, key: int) -> any:   # retrieves a (key, value) (removes the tuple or containing object from data structure (with garbage collection))
         hash_key = self.hash(key)
+        retrieval = None
         if self.probe_function == self.separate_chaining:
             current = self.hash_table[hash_key]
-            retrieval = None
-            if isinstance(current, bool|None):  #  or not current.contains(key) (not needed)
-                return retrieval  # None
-            else:
+            if not isinstance(current, bool|None):  #  or not current.contains(key) (not needed)
                 if current.node_tuple[0] == key:
                     retrieval = current.node_tuple
                     self.hash_table[hash_key] = current.next
@@ -209,18 +376,21 @@ class HashTable:
                             break
                         preceding = current
                         current = current.next
-                return retrieval  # tabbing this back one indentation resulted in bug fix (all users were getting J==0.0, and no retrieval during loading data resulted in anything but None)
+                # return retrieval  # tabbing this back one indentation resulted in bug fix (all users were getting J==0.0, and no retrieval during loading data resulted in anything but None)
         else:
             current = hash_key
             probe = 0
-            while self.hash_table[current] or self.hash_table[current][0] != key:
+            while self.hash_table[current]:
+                if isinstance(self.hash_table[current], tuple):
+                    if self.hash_table[current][0] == key:
+                        break
                 probe += 1
                 current = self.probe(hash_key, probe)
             # either probing ended on a False, or a value with key == key
-            retrieval = None if not self.hash_table[current] else self.hash_table[current][1] # value
-            if retrieval:
+            if self.hash_table[current]:
+                retrieval = self.hash_table[current]
                 self.hash_table[current] = True  # represents empty after removal
-            return retrieval
+        return retrieval
         
     def contains(self, key: int) -> bool:  # such as for computing intersection of items
         hash_key = self.hash(key)
@@ -239,7 +409,7 @@ class HashTable:
             return False if not self.hash_table[current] else True  # True == (key == key)
 
     class SeparateNode:
-        def __init__(self, node_tuple: tuple[int, any], next=True) -> None:  # True as next placeholder makes structures resulting from use of this consistent with containing class behavior 
+        def __init__(self, node_tuple: tuple[int, any], next=None) -> None:  # True as next placeholder makes structures resulting from use of this consistent with containing class behavior 
             self.node_tuple = node_tuple
             self.next = next
         
@@ -248,6 +418,11 @@ class HashTable:
                 return 1 + len(self.next)
             else:
                 return 1
+            
+        # separate chaining using simply a list is a good idea- could later make it sorted and add binary search- anyway, here's this
+        def __str__(self) -> str:
+            return str(self.node_tuple) + ' ⭢ ' + str(self.next)
+
 
         def add(self, key: int, value: any) -> None:
             current = self

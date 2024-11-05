@@ -353,11 +353,11 @@ class HashTable:
         start_time_probe = time.time()
         if self.probe_function == self.separate_chaining:
             if not isinstance(self.hash_table[hash_key], HashTable.SeparateNode):
-                self.hash_table[hash_key] = HashTable.SeparateNode(self, (key, value))
+                self.hash_table[hash_key] = HashTable.SeparateNode((key, value))
             else:
                 # adds to front of list
                 self.collision_count += 1
-                self.hash_table[hash_key] = HashTable.SeparateNode(self, (key, value), self.hash_table[hash_key])
+                self.hash_table[hash_key] = HashTable.SeparateNode((key, value), self.hash_table[hash_key])
             self.probe_time += time.time() - start_time_probe
         else:
             current = hash_key
@@ -435,7 +435,7 @@ class HashTable:
     class SeparateNode:
         """a recursively defined linked list (node)"""
         # separate chaining using simply a list is a good idea- could later make it sorted and add binary search- anyway, here's this
-        def __init__(self, hash_table, node_tuple: tuple[int, any], next=None) -> None:  # True as next placeholder makes structures resulting from use of this consistent with containing class behavior 
+        def __init__(self, node_tuple: tuple[int, any], next=None) -> None:  # True as next placeholder makes structures resulting from use of this consistent with containing class behavior 
             self.node_tuple = node_tuple
             self.next = next
         

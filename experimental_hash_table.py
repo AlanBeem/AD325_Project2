@@ -18,7 +18,7 @@ class ExperimentalHashTable(HashTable):
         hash2 = self.rand_hash(probe)
         return (hash1 + hash2) % hash_size
    ##
-    def __init__(self, size: int, collision_avoidance: str ='separate chaining', initial_data: list[tuple] =[]):
+    def __init__(self, size: int, collision_avoidance: str ='separate chaining', initial_data: list[tuple[any, any]] =[]):
         super().__init__(size, collision_avoidance, initial_data)
         if collision_avoidance.lower().count('rand') > 0:
             self.probe_function = self.rand_hash_probing

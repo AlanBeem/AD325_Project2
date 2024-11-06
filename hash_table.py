@@ -77,7 +77,7 @@ class HashTable:
     def separate_chaining(hash1: int, probe: int, hash_size: int) -> int:
         # This is a placeholder method, sufficient for conditional execution of 
         #  class method defined behaviors
-        #  (by default, collision_avoidance='separate chaining', line 178)
+        #  (by default, collision_avoidance='separate chaining')
         pass
 
     @staticmethod
@@ -176,20 +176,6 @@ class HashTable:
     def to_20_probing(hash1: int, probe: int, hash_size: int) -> int:
         return (hash1 + probe**20) % hash_size
     
-    # These do need to be in a subclass... TODO
-    # def rand_hash(self, key) -> int:
-    #     if not self.rand_key_dict.contains(key):
-    #         rand_16bits = SystemRandom().getrandbits(16)
-    #         self.rand_key_set.insert(rand_16bits, rand_16bits)
-    #         self.rand_key_dict.insert(key, rand_16bits)
-    #     dicted_tuple = self.rand_key_dict.retrieve(key)
-    #     self.rand_key_dict.insert(dicted_tuple[0], dicted_tuple[1])  # could do default value arguments to also accept a tuple directly
-    #     return dicted_tuple[1]
-
-    # def rand_hash_probing(self, hash1: int, probe: int, hash_size: int) -> int:
-    #     hash2 = self.rand_hash(probe)
-    #     return (hash1 + hash2) % hash_size
-    
 # ## # # #  #  #  #
     def __init__(self, size, collision_avoidance: str = 'separate chaining', initial_data: list[tuple] = []) -> None:
         # False represents never filled, True represents removed; filled: tuple (key, value) or SeparateNode
@@ -197,13 +183,14 @@ class HashTable:
         #  and actually as I think about it further, were the table not reset when rehashing, there would be a loop of rehashing
         if size < 2:
             size = 2
+        self.probe_distances = []
         self.retrieve_time = 0
         self.insert_time = 0
         self.probe_time = 0
         self.collision_count_by_hashsize = []
         self.collision_count = 0
         self.rehash_count = 0
-        self.hash_table = [False for i in range(size)]  # self.insert: self.hash_table[current] = (key, value)
+        self.hash_table = [None if collision_avoidance.startswith('sepa') else False for i in range(size)]  # self.insert: self.hash_table[current] = (key, value)
         self.load_factor_num = 0
         self.load_factor_div = len(self.hash_table)
         self.rehash_next_size = lambda p: 2 * len(p)  # double the size of the hash table
@@ -287,7 +274,7 @@ class HashTable:
     def display(self) -> None:
         print(self)
 
-    def get_all(self):
+    def get_all(self) -> list[tuple[any, any]]:
         """returns all_tuples without removing """
         all_tuples = []
         for each in self.hash_table:
@@ -298,7 +285,7 @@ class HashTable:
                     all_tuples.append(each)
         return all_tuples
 
-    def get_keys(self) -> list[int]:
+    def get_keys(self) -> list:
         return [each[0] for each in self.get_all()]
 
     def rehash_table(self, force_rehash: bool =False) -> bool:  # -> float ? # return time for each function
@@ -311,16 +298,16 @@ class HashTable:
         # else:
         #     rehash_bool = sum([int(bool(each)) for each in self.hash_table]) / self.load_factor_div >= 0.5
         if rehash_bool or force_rehash:
+            self.collision_count_by_hashsize.append((self.load_factor_div, self.collision_count))
+            self.collision_count = 0
             # print(f"rehashing from {len(self.hash_table)} to {self.get_next_prime(2 * len(self.hash_table))}")
             current_data = self.get_all()
             # print(f"current_data: {current_data}")
             self.load_factor_num = 0  # count up again from 0 in each .insert()
             self.load_factor_div = self.get_next_prime(self.rehash_next_size(self.hash_table))
-            self.hash_table = [False for r in range(self.load_factor_div)]
+            self.hash_table = [None if self.probe_function is self.separate_chaining else False for r in range(self.load_factor_div)]
             for each in current_data:
                 self.insert(each[0], each[1])
-        # de_tombstone table: updating lots of values leads to an abundance of empty after removal values
-        
         return rehash_bool or force_rehash
     
     def de_tombstone_table(self) -> None:
@@ -341,11 +328,11 @@ class HashTable:
 
 
     def probe(self, hash_key, probe) -> int:
-        self.collision_count_by_hashsize.append(len(self.hash_table))  # maintains data that can be used to construct a per hashsize view of collisions, which can be compared across techniques
         self.collision_count += 1
         return self.probe_function(hash_key, probe, len(self.hash_table))  # TODO Add traversal tracking to SeparateNode (?)
     
     def insert(self, key, value: any) -> None:
+        self.probe_distances.append(['insert', 0])
         start_time = time.time()
         self.load_factor_num += 1  # removal leaves a value that must be traversed, so this is not decremented, however rehashing resets this to 0 before inserting all data
         self.rehash_table()  # conditional within method, re λ
@@ -367,7 +354,7 @@ class HashTable:
                 probe += 1
                 current = self.probe(hash_key, probe)
                 if probe >= len(self.hash_table) // 2:  # how often does this happen?
-                    # print("probe greater than or equal to N // 2")
+                    print("probe greater than or equal to N // 2")
                     self.rehash_table(True)
                     self.insert(key, value)
                     break
@@ -378,7 +365,9 @@ class HashTable:
             self.probe_time += time.time() - start_time_probe
         self.insert_time += time.time() - start_time
 
-    def retrieve(self, key) -> tuple[int, any]:   # retrieves a (key, value) (removes the tuple or containing object from data structure (with garbage collection))
+    def retrieve(self, key) -> tuple[any, any]:   # retrieves a (key, value) (removes the tuple or containing object from data structure (with garbage collection))
+        self.probe_distances.append(['retrieve', 0])
+        start_time = time.time()
         hash_key = self.hash(key)
         retrieval = None
         if self.probe_function == self.separate_chaining:
@@ -387,11 +376,13 @@ class HashTable:
                 if current.node_tuple[0] == key:
                     retrieval = current.node_tuple
                     self.hash_table[hash_key] = current.next
+                    self.probe_distances[-1][-1] += 1
                 else:
                     preceding = current  # traverse the nodes  #
                     current = current.next
                     while isinstance(current, HashTable.SeparateNode):  # ends when current is not a node
                         self.collision_count += 1
+                        self.probe_distances[-1][-1] += 1
                         if current.node_tuple[0] == key:
                             retrieval = current.node_tuple
                             preceding.next = current.next
@@ -407,18 +398,24 @@ class HashTable:
                     if self.hash_table[current][0] == key:
                         break
                 probe += 1
+                self.probe_distances[-1][-1] += 1
                 current = self.probe(hash_key, probe)  # collision_count += 1, in probe
             # either probing ended on a False, or a value with key == key
             if self.hash_table[current]:
                 retrieval = self.hash_table[current]
                 self.hash_table[current] = True  # represents empty after removal
+        self.retrieve_time += time.time() - start_time
         return retrieval
         
     def contains(self, key) -> bool:  # such as for computing intersection of items
+        self.probe_distances.append(['contains', 0])
         hash_key = self.hash(key)
         if self.probe_function == self.separate_chaining:
             current = self.hash_table[hash_key]
             if not isinstance(current, bool|None):
+                # contents_tuple = current.contains(key)
+                # self.probe_distances[-1][-1] += contents_tuple[1]
+                # return contents_tuple[0]
                 return current.contains(key)
         else:
             current = hash_key
@@ -427,10 +424,11 @@ class HashTable:
                 if not isinstance(self.hash_table[current], bool|None) and self.hash_table[current][0] == key:
                     break
                 probe += 1
+                self.probe_distances[-1][-1] += 1
                 current = self.probe(hash_key, probe)
             # either probing ended on a False, or a tuple (key, value) with key == key
             # that is, probing will not end on a True, therefore:
-            return False if not self.hash_table[current] else True  # True == (key == key)
+            return False if not self.hash_table[current] else True  # True indicates (key == key)
 
     class SeparateNode:
         """a recursively defined linked list (node)"""
@@ -455,7 +453,7 @@ class HashTable:
                 sub_list.extend(self.next.get_sub_list())
             return sub_list
 
-        def get_keys(self) -> list[int]:
+        def get_keys(self) -> list:
             keys_list = [self.node_tuple[0]]
             if not isinstance(self.next, bool|None):
                 keys_list.extend(self.next.get_keys())
@@ -463,10 +461,12 @@ class HashTable:
         
         def contains(self, key) -> bool:
             if self.node_tuple[0] == key:
-                return True
+                return True # , 1
             else:
-                if not isinstance(self.next, bool|None):
+                if self.next is not None:
+                    # contains_return = self.next.contains(key)
+                    # return contains_return[0], contains_return[1] + 1  # False if contains_return[0] is None else 
                     return self.next.contains(key)
                 else:
-                    return False
+                    return False  #, 1
 

@@ -1,10 +1,8 @@
 import csv
 from hash_table import HashTable
-from experimental_hash_table import ExperimentalHashTable
 from user_hash_table import UserHashTable
 # from max_heap import MaxHeap
 from user_max_heap import UserMaxHeap
-from random import SystemRandom
 
 
 class RecommendationSystem:  # this could be used with further synthetic data, such as incorporating time-series s (for example for some avg gaming time, what is number of times stopped playing something else and played this - number of times stopped playing this and played something else) # they may be wanting something but not finding it in the game, after trying- so maybe [recommend] similar # the games could be grouped by Jaccard similarity x Jaccard similarity (pairs of co-purchasing) and ranked lists ? [Clustering]
@@ -31,7 +29,7 @@ class RecommendationSystem:  # this could be used with further synthetic data, s
         self.user_maxheaps = []
         self.comparison_tables = []  # for all user comparisons, count number of collisions (doesn't include adding duplicates)
 
-    def load_data(self):
+    def load_data(self) -> None:
         """if load_data is run immediately following initialization, an exception will result because self.users == None"""
         with open(self.user_item_file, newline='') as csvfile:
             data_reader = csv.DictReader(csvfile, fieldnames=['user_id', 'item_id'])
@@ -41,19 +39,19 @@ class RecommendationSystem:  # this could be used with further synthetic data, s
                 game = row['item_id']
                 self.users.insert(user, game)
         csvfile.close()
-        # self.users.de_tombstone_table()
+        self.users.de_tombstone_table()
         # self.users.display()
 
 
-    def build_recommendation_system(self, technique):
-        self.users = UserHashTable(1, technique)  # collision avoidance technique (defaults to separate chaining)
+    def build_recommendation_system(self, technique, update_technique) -> None:
+        self.users = UserHashTable(11, technique)  # collision avoidance technique (defaults to separate chaining)
         # sets up table to first prime after 1
         #
         self.load_data()
         #
         all_users = self.users.get_all()
         # print(all_users)
-        self.user_maxheaps = [UserMaxHeap(f"{each[0]}", self.maxheap_update_technique) for each in all_users]  # idea: could get intersection by count of separate chains with more than 1 node
+        self.user_maxheaps = [UserMaxHeap(f"{each[0]}", update_technique) for each in all_users]  # idea: could get intersection by count of separate chains with more than 1 node
         for i in range(len(all_users)):         #
             for j in range(len(all_users)):     # # Cartesian product of Users x Users
                 if i != j:  #   #   #   #   #   # without this condition (and that below, but we don't need this calculation), the top recommended games would be games that the user has played (J(A,A)==1)
@@ -64,7 +62,7 @@ class RecommendationSystem:  # this could be used with further synthetic data, s
         # for each in self.user_maxheaps:
         #     print(each)
 
-    def get_jaccard_similarity(self, user_i: tuple[int, list], user_j: tuple[int, list]) -> float:
+    def get_jaccard_similarity(self, user_i: tuple[any, list], user_j: tuple[any, list]) -> float:
         """calling this without first setting up self.users (using self.load_data(filename)) will cause an exception."""
         self.comparison_tables.append(HashTable(31, self.users.collision_avoidance_string))  # tests for equality of input keys
         union = 0                   ### these provide a count of the union of these two sets (lines 85, 88, 95, 97)
@@ -81,7 +79,7 @@ class RecommendationSystem:  # this could be used with further synthetic data, s
                 union += 1          ###
         return intersection / union
     
-    def recommend_items_with_jaccard(self, target_user, technique, update_technique, top_n):
+    def recommend_items_with_jaccard(self, target_user, technique, update_technique, top_n) -> list[str]:
         if self.users is None:
             self.build_recommendation_system(technique, update_technique)
         # games from UserMaxHeap  # could add a reset to heap to keep space complexity to requirements for one user at a time
@@ -94,12 +92,12 @@ class RecommendationSystem:  # this could be used with further synthetic data, s
                 recommendations_for_user = [each_tuple[1] for each_tuple in user_top_n]
         return recommendations_for_user
     
-    def recommend_for_all_users_with_jaccard(self, top_n) -> None:
+    def recommend_for_all_users_with_jaccard(self, top_n) -> tuple[list[str], list[list[str]]]:
         recommendations_for_users = []
         user_keys = []
         for user_heap in self.user_maxheaps:
             user_keys.append(user_heap.name)
-            recommendations_for_users.append(self.recommend_items_with_jaccard(user_heap.name, self.users.collision_avoidance_string, '', top_n))
+            recommendations_for_users.append(self.recommend_items_with_jaccard(user_heap.name, self.users.collision_avoidance_string, 'sum', top_n))
         return user_keys, recommendations_for_users
     
     def all_table_insertion_time(self) -> float:

@@ -84,7 +84,7 @@ def demonstration() -> None:
     # print output to display hash table contents for some probing methods
     probing_functions_list = ['separate chaining', 'linear', 'quadratic', 'double', 'prime', 'rand']
     for each in probing_functions_list:
-        recommendation_system = RecommendationSystem('user_data_csv.csv')
+        recommendation_system = RecommendationSystem('user_item_data.csv')
         recommendation_system.build_recommendation_system(each, 'sum')
         # recommendation_system.users.de_tombstone_table()
         recommendation_system.users.display()

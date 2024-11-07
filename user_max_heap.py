@@ -4,7 +4,9 @@ from max_heap import MaxHeap
 class UserMaxHeap(MaxHeap):
     """UserMaxHeap is a max heap, except for each pushed (priority, value) it updates
     the priority of a matching value by two techniques: 1) maximum, 2) sum, and does not
-    add a new (key, value)."""
+    add a new (key, value). Additionally, top_n returns higher priorities first, but for
+    approximately equal priorities, it returns the alphabetically lesser title first (this
+    produces consistent results that don't depend on a hashed order)."""
     def __init__(self, name: str ='', update_technique: str ='max') -> None:
         super().__init__(name)
         self.update_technique = update_technique
@@ -32,6 +34,8 @@ class UserMaxHeap(MaxHeap):
             popped = self.array.pop()
         return popped
     
+    # Idea: make heap prefer alphabetically earlier titles for games with tied priority
+
     # def display(self) -> None:
     #     pretty_tree_from_heap(self)
     

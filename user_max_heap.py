@@ -2,63 +2,31 @@ from max_heap import MaxHeap
 
 
 class UserMaxHeap(MaxHeap):
-    # same except updates values by two techniques: 1) maximum, 2) sum
-    def __init__(self, name: str ='', update_technique: str ='max') -> None:                      # differences from super
+    """UserMaxHeap is a max heap, except for each pushed (priority, value) it updates
+    the priority of a matching value by two techniques: 1) maximum, 2) sum, and does not
+    add a new (key, value)."""
+    def __init__(self, name: str ='', update_technique: str ='max') -> None:
         super().__init__(name)
-        self.update_technique = update_technique                                                  #
+        self.update_technique = update_technique
     
     def push(self, priority: float, item: any) -> None:
         if len(self.array) == 0:
-            # self.array[0] = (priority, item)
             self.array.append((priority, item))
         else:
-            ## BUG: inconsistent results for keep maximum technique
-            ## late solution: modify in place and percolate up
             for index in range(len(self.array)):
                 if self.array[index][1] == item:
                     if self.update_technique == 'sum':
                         self.array[index] = (self.array[index][0] + priority, item)
                     elif self.update_technique == 'max':
-                        self.array[index] = (max(round(self.array[index][0], 4), round(priority, 4)), item)
+                        self.array[index] = (max(self.array[index][0], priority), item)
                     self.percolate_up(index)
-                    # self.percolate_down(0)
                     break
-            # tuples are not heaped by item value at all, but by priority, therefore linear search#
-            # traverses array, finds value, pops value to update, updates and inserts value         #
-            # update_bool = False                                                                   #
-            # array_was = self.array.copy()
-            # array_range = list(range(len(self.array)))
-            # for each_tuple, index in zip(self.array, range(len(self.array))):                     # 
-            #     # print(each_tuple)
-            #     if each_tuple[1] == item:                                                         #
-            #         # print(f"entered condition for each_tuple[1] == item: item: {item}, each_tuple[1]: {each_tuple[1]}")
-            #         was_tuple = self.pop(index)
-            #         # update_bool = True                                                            #
-            #         if self.update_technique.lower() == 'sum':                                    #
-            #             # self.array[index] = (priority + self.array[index][0], item)               ##  this update likely violates the heap property
-            #             # self.percolate_up(index)
-            #             # self.percolate_down(0)
-            #             priority = priority + was_tuple[0]
-            #         elif self.update_technique.lower().startswith('max'):                         #
-            #             # self.array[index] = (max(priority, self.array[index][0]), item)           ##
-            #             # self.percolate_up(index)
-            #             # self.percolate_down(0)
-            #             priority = max(priority, was_tuple[0])
-            #         break                                                                         #
-            # if not update_bool:
             super().push(priority, item)
     
-    def pop(self, index: int =0) -> tuple[float, any]:                                                                 #
+    def pop(self, index: int =0) -> tuple[float, any]:
         if len(self.array) > 1:
-        # print(f"index: {index}")
-        # print(f"self.last_child: {self.last_child}")
-        # print(f"len(self.array): {len(self.array)}")
-        # self.swap(index, self.last_child)                                                         #
             self.swap(index, len(self.array) - 1)
             popped = self.array.pop()
-        # self.last_child -= 1
-        # self.last_child = max(0, self.last_child - 1)
-        # self.last_child = len(self.array) - 1
             self.percolate_down(index)
         else:
             popped = self.array.pop()

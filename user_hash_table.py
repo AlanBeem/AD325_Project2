@@ -11,7 +11,8 @@ class UserHashTable(ExperimentalHashTable):
         if self.contains(key):
             # self.collision_count += 1
             retrieved = self.retrieve(key)
-            retrieved[1].append(value)
+            if not value in retrieved[1]:  # data contains some duplicate entries
+                retrieved[1].append(value)
             value = retrieved[1]
             # 
         elif not isinstance(value, list):

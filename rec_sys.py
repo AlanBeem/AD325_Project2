@@ -28,6 +28,7 @@ class RecommendationSystem:  # this could be used with further synthetic data, s
         self.user_item_file = user_item_file
         self.user_maxheaps = []
         self.comparison_tables = []  # for all user comparisons, count number of collisions (doesn't include adding duplicates)
+        self.games_cumulative_list = []
 
     def load_data(self) -> None:
         """if load_data is run immediately following initialization, an exception will result because self.users == None"""
@@ -37,47 +38,94 @@ class RecommendationSystem:  # this could be used with further synthetic data, s
             for row in data_reader:
                 user = row['user_id']
                 game = row['item_id']
+                self.games_cumulative_list.append(game)
                 self.users.insert(user, game)
         csvfile.close()
-        self.users.de_tombstone_table()
+        self.users.de_tombstone_table()  # when using open addressing the table accumulates a large number of True entries (empty after removal)
         # self.users.display()
-
 
     def build_recommendation_system(self, technique, update_technique) -> None:
         self.users = UserHashTable(11, technique)  # collision avoidance technique (defaults to separate chaining)
-        # sets up table to first prime after 1
+        # sets up table to first prime after 11
         #
         self.load_data()
         #
         all_users = self.users.get_all()
-        # print(all_users)
-        self.user_maxheaps = [UserMaxHeap(f"{each[0]}", update_technique) for each in all_users]  # idea: could get intersection by count of separate chains with more than 1 node
+        all_users.sort(key=lambda p: p[0])
+        self.user_maxheaps = [UserMaxHeap(f"{each[0]}", update_technique) for each in all_users]
+        #
+        # this addition made to promote consistent ordering upon heaping values from a hashed order
+        #
+        for each_game in set(self.games_cumulative_list):
+            game_bias = (self.games_cumulative_list.count(each_game) / len(self.games_cumulative_list)) * 0.00000000000001
+            for each_heap in self.user_maxheaps:
+                each_heap.push(game_bias, each_game)
+        games_list = list(set(self.games_cumulative_list))
+        games_similarity_matrix = [[0 for g in games_list] for l in games_list]
+        game_pairs = set()
+        for i, game_i in zip(range(len(games_list)), games_list):
+            for j, game_j in zip(range(len(games_list)), games_list):
+                game_pairs.add((game_i, game_j))
+                for each_user in all_users:
+                    games_similarity_matrix[i][j] += 1 if (game_i in each_user[1] and game_j in each_user[1]) else 0
+        for k in range(len(games_similarity_matrix)):
+            for L in range(len(games_similarity_matrix)):
+                games_similarity_matrix[k][L] /= len(game_pairs)
+        minimum_similarity = 1
         for i in range(len(all_users)):         #
             for j in range(len(all_users)):     # # Cartesian product of Users x Users
-                if i != j:  #   #   #   #   #   # without this condition (and that below, but we don't need this calculation), the top recommended games would be games that the user has played (J(A,A)==1)
+                if i != j:  # don't calcualte J(A,A)
+                    similarity = self.get_jaccard_similarity(all_users[i], all_users[j])
+                    if similarity < minimum_similarity:
+                        minimum_similarity = similarity
+        #
+        #
+        user_rec_games = []
+        for i in range(len(all_users)):         #
+            user_rec_games.append(set())
+            for j in range(len(all_users)):     # # Cartesian product of Users x Users
+                if i != j:  # don't calcualte J(A,A)
+                    similarity = self.get_jaccard_similarity(all_users[i], all_users[j])
                     for game in all_users[j][1]:
-                        if not game in all_users[i][1]:  # don't exclude games named e.g. 'user6'
-                            self.user_maxheaps[i].push(self.get_jaccard_similarity(all_users[i][1], all_users[j][1]), game)  # Could weight J by how similar games are that the users have in their intersection and union ### or make a 2D space out of it (weighted intersection x weighted union) (could even subtract the sum of intra-intersection similarity from intra-union similarity; but I'm not sure how the values would work out) ### bring in domain of discourse: defined categorical relationships between games- making recommendations based on a subset of features for a particular time: later multi-modal maximization function driving behavior of automata (play-time, time-series of outcomes)
-        # print("max heaps:")
-        # for each in self.user_maxheaps:
-        #     print(each)
+                        if not game in all_users[i][1]:
+                            user_rec_games[-1].add(game)
+                            self.user_maxheaps[i].push(similarity, game)
+        #
+        # this adds the game-similarity to the similarity heap
+        #
+        for each_heap, each_user_rec_games in zip(self.user_maxheaps, user_rec_games):
+            for game in each_user_rec_games:
+                game_similarity = sum([games_similarity_matrix[games_list.index(game)][s] for s in range(len(games_similarity_matrix[0]))])  # it is a square matrix
+                game_similarity *= minimum_similarity
+                game_similarity /= 100
+                each_heap.push(game_similarity, game)
 
     def get_jaccard_similarity(self, user_i: tuple[any, list], user_j: tuple[any, list]) -> float:
         """calling this without first setting up self.users (using self.load_data(filename)) will cause an exception."""
         self.comparison_tables.append(HashTable(31, self.users.collision_avoidance_string))  # tests for equality of input keys
+        # self.comparison_tables.append(HashTable(31, 'separate'))  # tests for equality of input keys
         union = 0                   ### these provide a count of the union of these two sets (lines 85, 88, 95, 97)
         intersection = 0                  ## these provide a count of the intersection of these two sets (lines 86, 94)
         for each in user_i[1]:
             union += 1              ###
             self.comparison_tables[-1].insert(each, '')
-        # print(self.comparison_tables[-1])
         for each in user_j[1]:
             if self.comparison_tables[-1].contains(each):
                 intersection += 1         ##
-                union -= 1          ###
             else:
                 union += 1          ###
-        return intersection / union
+        calc1 = intersection / union  # return 
+        
+        user_i_set = set(user_i[1])
+        user_j_set = set(user_j[1])
+        
+        calc2 = len(user_i_set.intersection(user_j_set)) / len(user_i_set.union(user_j_set))
+
+        if calc1 != calc2:
+            print(f"calc1: {calc1}")
+            print(f"calc2: {calc2}")
+
+        return len(user_i_set.intersection(user_j_set)) / len(user_i_set.union(user_j_set))
     
     def recommend_items_with_jaccard(self, target_user, technique, update_technique, top_n) -> list[str]:
         if self.users is None:
@@ -95,6 +143,7 @@ class RecommendationSystem:  # this could be used with further synthetic data, s
     def recommend_for_all_users_with_jaccard(self, top_n) -> tuple[list[str], list[list[str]]]:
         recommendations_for_users = []
         user_keys = []
+        
         for user_heap in self.user_maxheaps:
             user_keys.append(user_heap.name)
             recommendations_for_users.append(self.recommend_items_with_jaccard(user_heap.name, self.users.collision_avoidance_string, 'sum', top_n))

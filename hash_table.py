@@ -353,8 +353,8 @@ class HashTable:
             while self.hash_table[current]:
                 probe += 1
                 current = self.probe(hash_key, probe)
-                if probe >= len(self.hash_table) // 2:  # how often does this happen?
-                    print("probe greater than or equal to N // 2")
+                if probe >= len(self.hash_table):  # how often does this happen?  #  // 2
+                    # print("probe greater than or equal to N // 2")
                     self.rehash_table(True)
                     self.insert(key, value)
                     break
@@ -389,7 +389,6 @@ class HashTable:
                             break
                         preceding = current
                         current = current.next  #              #
-                # return retrieval  # tabbing this back one indentation resulted in bug fix (all users were getting J==0.0, and no retrieval during loading data resulted in anything but None)
         else:
             current = hash_key
             probe = 0
@@ -410,25 +409,24 @@ class HashTable:
     def contains(self, key) -> bool:  # such as for computing intersection of items
         self.probe_distances.append(['contains', 0])
         hash_key = self.hash(key)
+        contains_bool = False
         if self.probe_function == self.separate_chaining:
             current = self.hash_table[hash_key]
-            if not isinstance(current, bool|None):
-                # contents_tuple = current.contains(key)
-                # self.probe_distances[-1][-1] += contents_tuple[1]
-                # return contents_tuple[0]
-                return current.contains(key)
+            if isinstance(current, HashTable.SeparateNode):
+                contains_bool = current.contains(key)
         else:
             current = hash_key
             probe = 0
             while self.hash_table[current]:
                 if not isinstance(self.hash_table[current], bool|None) and self.hash_table[current][0] == key:
+                    contains_bool = True
                     break
                 probe += 1
                 self.probe_distances[-1][-1] += 1
                 current = self.probe(hash_key, probe)
             # either probing ended on a False, or a tuple (key, value) with key == key
             # that is, probing will not end on a True, therefore:
-            return False if not self.hash_table[current] else True  # True indicates (key == key)
+        return contains_bool
 
     class SeparateNode:
         """a recursively defined linked list (node)"""
@@ -460,13 +458,13 @@ class HashTable:
             return keys_list
         
         def contains(self, key) -> bool:
+            contains_bool = False
             if self.node_tuple[0] == key:
-                return True # , 1
+                # print("contains point 1, line 464")
+                contains_bool = True
             else:
-                if self.next is not None:
-                    # contains_return = self.next.contains(key)
-                    # return contains_return[0], contains_return[1] + 1  # False if contains_return[0] is None else 
-                    return self.next.contains(key)
-                else:
-                    return False  #, 1
+                if isinstance(self.next, HashTable.SeparateNode):
+                    contains_bool = self.next.contains(key)
+            return contains_bool
+
 
